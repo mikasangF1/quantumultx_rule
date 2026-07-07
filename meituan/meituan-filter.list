@@ -1,0 +1,13 @@
+# 美团 & 美团外卖 分流拒绝规则
+# 配合 meituan.conf（重写）一起使用
+
+host-suffix, meituan.xn, reject
+host-suffix, meituan.yoga, reject
+host-suffix, meituangov.cn, reject
+host-suffix, report.meituan.com, reject
+host-suffix, analytics.meituan.net, reject
+host-suffix, wmlog.meituan.com, reject
+host-suffix, ad.e.waimai.sankuai.com, reject
+host-suffix, mads.meituan.com, reject
+host-suffix, dreport.meituan.net, reject
+host-suffix, d.meituan.net, reject
