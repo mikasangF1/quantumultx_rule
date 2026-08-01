@@ -1,0 +1,36 @@
+# Bank HK
+# 香港银行 & 券商分流规则
+# 格式: Quantumult X / Loon / Surge 通用 (HOST-SUFFIX)
+# 维护: mikasangF1
+
+# 中银香港 BOCHK
+HOST-SUFFIX,bochk.com
+HOST-SUFFIX,etnet.com.hk
+
+# 汇丰香港 HSBC HK
+HOST-SUFFIX,hsbc.com.hk
+HOST-SUFFIX,cdn.optimizely.com
+HOST-SUFFIX,log-58144bf0.we-stats.com
+HOST-SUFFIX,prod.ap-east-1.vam-hk.cloud1.vv1865.com
+HOST-SUFFIX,sy.idp.liveperson.net
+
+# 渣打香港 Standard Chartered HK
+HOST-SUFFIX,sc.com
+HOST-SUFFIX,standchartbank.data.adobedc.net
+HOST-SUFFIX,adobedtm.com
+
+# ZA Bank 众安银行
+HOST-SUFFIX,zajourney.com
+HOST-SUFFIX,zafinsvc.com
+HOST-SUFFIX,za.group
+
+# 致富证券 Chief Securities
+HOST-SUFFIX,chiefgroup.com
+HOST-SUFFIX,chiefgroup.com.hk
+HOST-SUFFIX,chiefsec.com
+
+# 复星财富 Fosun Wealth
+HOST-SUFFIX,fosunwealth.com
+
+# 平安数字银行 PAO Bank
+HOST-SUFFIX,paob.com.hk
