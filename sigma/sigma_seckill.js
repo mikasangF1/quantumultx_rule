@@ -79,20 +79,25 @@ async function getCookie() {
 async function showInventory() {
   try {
     const body = $.toObj($response.body) || {};
-    if (body && (body.kcalBalance !== undefined || body.balance !== undefined)) {
-      const balance = body.kcalBalance || body.balance || "N/A";
-      const chance = body.exchangeChance || body.chance || "N/A";
+    const d = body?.data || {};
+    // 真实字段: account.availKcal / account.remainQuota / goodsList
+    if (d.account || d.goodsList) {
+      const acc = d.account || {};
+      const balance = acc.availKcal ?? acc.totalKcal ?? "N/A";
+      const quota = acc.remainQuota ?? "N/A";
+      const ext = d.extConfig || {};
+      const stockBegin = ext.stockBegin || "18:00";
       let stockMsg = "";
-      const items = body.products || body.goods || [];
+      const items = d.goodsList || [];
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        const name = item.productName || "[" + item.productId + "]";
-        const stock = item.stock || item.remain || 0;
-        const cost = item.kcalCost || item.cost || "?";
-        stockMsg += (stock > 0 ? "✅" : "❌") + " " + name + " 库存:" + stock + " 需要:" + cost + "kcal\n";
+        const name = item.brand ? item.brand + "-" + item.name : (item.name || "[" + item.productId + "]");
+        const inStock = item.stockStatus === 1;
+        const cost = item.kcalCost ?? "?";
+        stockMsg += (inStock ? "✅" : "❌") + " " + name + " " + cost + "kcal" + (item.redeemNotStarted ? "(未开始)" : "") + "\n";
       }
-      $.msg($.name, "余额:" + balance + " 兑换次数:" + chance, stockMsg);
-      $.info("余额:" + balance + " 次数:" + chance);
+      $.msg($.name, `余额:${balance}kcal 今日剩余次数:${quota}`, `每天${stockBegin}放库存\n` + stockMsg);
+      $.info(`余额:${balance} 次数:${quota} 放库存时间:${stockBegin}`);
       $.info(stockMsg);
     }
   } catch(e) {
@@ -105,7 +110,8 @@ async function seckillReplay() {
   const url = $request.url || "";
   const method = $request.method || "";
 
-  if (url.indexOf("/quidd/kcal/act/redeem") === -1 || method !== "POST") {
+  // 只拦截真正的兑换接口，redeem/list是查询接口要放行
+  if (url.indexOf("/quidd/kcal/act/redeem") === -1 || url.indexOf("/redeem/list") !== -1 || method !== "POST") {
     return;
   }
 
@@ -184,29 +190,23 @@ async function retryOnce(idx, url, headers, body) {
     const status = res.status || res.statusCode || 0;
     const data = res.body ? ($.toObj(res.body) || {}) : ($.toObj(res) || {});
 
-    // 判断成功
-    const code = data.code !== undefined ? data.code : (data.status !== undefined ? data.status : -1);
-    const msg = data.message || data.msg || data.error || "";
+    // 判断成功：真实API code=0 且 success=true
+    const code = data.code !== undefined ? data.code : -1;
+    const msg = data.msg || data.message || data.error || "";
 
-    if (code === 0 || data.success === true || data.orderId || data.couponCode) {
+    if (code === 0 && data.success === true) {
       sigma.successCount++;
       $.info("#" + idx + " ✅ 成功! status=" + status);
 
       // 首次成功通知
       if (sigma.successCount === 1) {
-        const coupon = data.couponCode || data.coupon_code || (data.data ? data.data.couponCode : "") || "N/A";
-        $.msg($.name, "🎉 抢兑成功!", "#" + idx + " status=" + status + " 优惠券:" + coupon);
+        const item = data.data || {};
+        $.msg($.name, "🎉 抢兑成功!", "#" + idx + " " + JSON.stringify(item).substring(0, 200));
       }
     } else {
       sigma.failCount++;
-      if (idx < 3 || (code !== 2001 && code !== "ALREADY_REDEEMED")) {
+      if (idx < 3) {
         $.info("#" + idx + " code=" + code + " msg=" + msg);
-      }
-      // 已兑换过
-      if (code === 2001 || code === "ALREADY_REDEEMED") {
-        if (sigma.successCount === 0 && sigma.failCount === 1) {
-          $.msg($.name, "已兑换过", msg);
-        }
       }
     }
   } catch(e) {
