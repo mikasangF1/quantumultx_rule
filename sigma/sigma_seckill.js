@@ -9,7 +9,6 @@
  *
  * [rewrite_local]
  * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-response-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
- * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-request-header https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
  * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
  *
  * [MITM]
@@ -45,14 +44,8 @@ var sigma = {
 // ===== 主程序执行入口 =====
 !(async () => {
   if (typeof $request != "undefined") {
-    const reqUrl = $request.url || "";
-    if (reqUrl.indexOf("/quidd/kcal/act/redeem") !== -1) {
-      // 拦截 redeem 请求 → 快速重放
-      await seckillReplay();
-    } else {
-      // 拦截 home 请求头 → 获取凭证
-      await getCookie();
-    }
+    // 拦截 redeem 请求 → 获取凭证 + 快速重放
+    await seckillReplay();
   } else if (typeof $response != "undefined" && $response && $response.body) {
     // 拦截 home 响应 → 通知库存
     await showInventory();
@@ -61,14 +54,14 @@ var sigma = {
 .catch((e) => { $.logErr(e), $.msg($.name, `⛔️ script run error!`, e.message || e) })
 .finally(() => $.done());
 
-// ===== 获取Cookie - 拦截home请求头存凭证 =====
+// ===== 获取Cookie - 拦截redeem请求头存凭证 =====
 async function getCookie() {
   try {
     const headers = ObjectKeys2LowerCase($request.headers);
     const auth = headers['authorization'] || '';
     const shield = headers['shield'] || '';
     if (!auth && !shield) {
-      $.info("home请求头无凭证可存");
+      $.info("请求头无凭证可存");
       return;
     }
     // 存储完整请求头，供调试/离线分析用
@@ -110,7 +103,7 @@ async function showInventory() {
   }
 }
 
-// ===== 拦截 redeem 请求 → 快速重放 =====
+// ===== 拦截 redeem 请求 → 获取凭证 + 快速重放 =====
 async function seckillReplay() {
   const url = $request.url || "";
   const method = $request.method || "";
@@ -118,6 +111,9 @@ async function seckillReplay() {
   if (url.indexOf("/quidd/kcal/act/redeem") === -1 || method !== "POST") {
     return;
   }
+
+  // 先存凭证
+  await getCookie();
 
   const reqBody = $request.body || "";
   const reqHeaders = $request.headers || {};
