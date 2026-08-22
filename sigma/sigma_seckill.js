@@ -10,7 +10,6 @@ new Env("Sigma卡路里抢兑");
 每天18:00放库存, 每日限兑1次, 活动截止2026-08-31
 
 [rewrite_local]
-^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-response-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
 ^https:\/\/[^\/]+\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
 
 [MITM]
@@ -52,51 +51,10 @@ var sigma = {
   if (typeof $request != "undefined") {
     // 拦截 redeem 请求 → 获取凭证 + 快速重放
     await seckillReplay();
-  } else if (typeof $response != "undefined" && $response && $response.body) {
-    // 拦截 home 响应 → 存商品 + 通知库存
-    await showInventory();
   }
 })()
 .catch((e) => { $.logErr(e), $.msg($.name, `⛔️ script run error!`, e.message || e) })
 .finally(() => $.done());
-
-// ===== 拦截 home 响应 → 存商品列表 + 通知库存 =====
-async function showInventory() {
-  try {
-    const body = $.toObj($response.body) || {};
-    const d = body?.data || {};
-    // 真实字段: account.availKcal / account.remainQuota / goodsList
-    if (!(d.account || d.goodsList)) return;
-
-    const acc = d.account || {};
-    const balance = acc.availKcal ?? acc.totalKcal ?? "N/A";
-    const quota = acc.remainQuota ?? "N/A";
-    const ext = d.extConfig || {};
-    const stockBegin = ext.stockBegin || "18:00";
-
-    // 存商品列表供参考
-    $.setjson({
-      account: acc,
-      goodsList: d.goodsList,
-      saveTime: new Date().toISOString()
-    }, 'sigma_goods');
-
-    let stockMsg = "";
-    const items = d.goodsList || [];
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const name = item.brand ? item.brand + "-" + item.name : (item.name || "[" + item.productId + "]");
-      const inStock = item.stockStatus === 1;
-      const cost = item.kcalCost ?? "?";
-      stockMsg += (inStock ? "✅" : "❌") + " " + name + " " + cost + "kcal" + (item.redeemNotStarted ? "(未开始)" : "") + "\n";
-    }
-    $.msg($.name, `余额:${balance}kcal 今日剩余次数:${quota}`, `每天${stockBegin}放库存\n` + stockMsg);
-    $.info(`余额:${balance} 次数:${quota} 放库存时间:${stockBegin}`);
-    $.info(stockMsg);
-  } catch(e) {
-    $.error("home parse error: " + e);
-  }
-}
 
 // ===== 获取Cookie - 拦截redeem请求头存凭证 =====
 async function getCookie() {
