@@ -8,9 +8,9 @@
  * 脚本兼容：Surge、QuantumultX、Loon、Shadowrocket，不支持青龙
  *
  * [rewrite_local]
- * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-response-body sigma_seckill.js
- * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-request-header sigma_seckill.js
- * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/redeem$ url script-request-body sigma_seckill.js
+ * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-response-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
+ * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-request-header https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
+ * ^https:\/\/[^\/]+\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
  *
  * [MITM]
  * hostname = as.sigma.run, api.sigma.run
