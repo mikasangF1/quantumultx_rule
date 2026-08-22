@@ -45,8 +45,14 @@ var sigma = {
 // ===== 主程序执行入口 =====
 !(async () => {
   if (typeof $request != "undefined") {
-    // 拦截 redeem 请求 → 快速重放
-    await seckillReplay();
+    const reqUrl = $request.url || "";
+    if (reqUrl.indexOf("/quidd/kcal/act/redeem") !== -1) {
+      // 拦截 redeem 请求 → 快速重放
+      await seckillReplay();
+    } else {
+      // 拦截 home 请求头 → 获取凭证
+      await getCookie();
+    }
   } else if (typeof $response != "undefined" && $response && $response.body) {
     // 拦截 home 响应 → 通知库存
     await showInventory();
@@ -54,6 +60,30 @@ var sigma = {
 })()
 .catch((e) => { $.logErr(e), $.msg($.name, `⛔️ script run error!`, e.message || e) })
 .finally(() => $.done());
+
+// ===== 获取Cookie - 拦截home请求头存凭证 =====
+async function getCookie() {
+  try {
+    const headers = ObjectKeys2LowerCase($request.headers);
+    const auth = headers['authorization'] || '';
+    const shield = headers['shield'] || '';
+    if (!auth && !shield) {
+      $.info("home请求头无凭证可存");
+      return;
+    }
+    // 存储完整请求头，供调试/离线分析用
+    const saved = {
+      url: $request.url,
+      method: $request.method,
+      headers: headers,
+      saveTime: new Date().toISOString()
+    };
+    $.setjson(saved, 'sigma_data');
+    $.msg($.name, `🎉凭证更新成功!`, `authorization: ${maskString(auth)}\nshield: ${maskString(shield)}`);
+  } catch (e) {
+    $.error(`获取凭证失败: ${e.message || e}`);
+  }
+}
 
 // ===== 拦截 home 响应 → 通知库存 =====
 async function showInventory() {
@@ -200,6 +230,8 @@ function DoubleLog(o) { o && ($.log(`${o}`), $.notifyMsg.push(`${o}`)) };
 function debug(g, e = "debug") { "true" === $.is_debug && ($.log(`\n-----------${e}------------\n`), $.log("string" == typeof g ? g : $.toStr(g) || `debug error => t=${g}`), $.log(`\n-----------${e}------------\n`)) }
 //From xream's ObjectKeys2LowerCase
 function ObjectKeys2LowerCase(obj) { return !obj ? {} : Object.fromEntries(Object.entries(obj).map(([k, v]) => [k.toLowerCase(), v])) };
+//maskString
+function maskString(input) { try { if (input?.length <= 6) { return input; } let start = input.slice(0, 3); let end = input.slice(-3); return `${start}****${end}`; } catch (e) { return input } }
 //From sliverkiss's Request
 async function Request(t) { "string" == typeof t && (t = { url: t }); try { if (!t?.url) throw new Error("[URL][ERROR] 缺少 url 参数"); let { url: o, type: e, headers: r = {}, body: s, params: a, dataType: n = "form", resultType: u = "data" } = t; const p = e ? e?.toLowerCase() : "body" in t ? "post" : "get", c = o.concat("post" === p ? "?" + $.queryStr(a) : ""), i = t.timeout ? $.isSurge() ? t.timeout / 1e3 : t.timeout : 1e4; "json" === n && (r["Content-Type"] = "application/json;charset=UTF-8"); const y = "string" == typeof s ? s : (s && "form" == n ? $.queryStr(s) : $.toStr(s)), l = { ...t, ...t?.opts ? t.opts : {}, url: c, headers: r, ..."post" === p && { body: y }, ..."get" === p && a && { params: a }, timeout: i }, m = $.http[p.toLowerCase()](l).then((t => "data" == u ? $.toObj(t.body) || t.body : "response" == u ? t : $.toObj(t) || t)).catch((t => $.log(`[${p.toUpperCase()}][ERROR] ${t}\n`))); return Promise.race([new Promise(((t, o) => setTimeout((() => o("当前请求已超时")), i))), m]) } catch (t) { console.log(`[${p.toUpperCase()}][ERROR] ${t}\n`) } }
 //jwt parse tool
