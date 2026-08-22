@@ -1,0 +1,8 @@
+# Sigma 卡路里抢兑 重写配置
+# 引用本文件后，MITM hostname 自动生效
+# 脚本：https://github.com/mikasangF1/quantumultx_rule/blob/main/sigma/sigma_seckill.js
+
+hostname = as.sigma.run, api.sigma.run
+
+^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-response-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
+^https:\/\/[^\/]+\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
