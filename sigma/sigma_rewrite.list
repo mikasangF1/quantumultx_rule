@@ -1,5 +1,5 @@
-hostname = as.sigma.run, api.sigma.run
-
 [rewrite_local]
-^https:\/\/api\.sigma\.run\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_rewrite.js
+^https:\/\/api\.sigma\.run\/quidd\/kcal\/act\/redeem$ url script-request-body https://cdn.jsdelivr.net/gh/mikasangF1/quantumultx_rule@main/sigma/sigma_rewrite.js
+
 [MITM]
+hostname = as.sigma.run, api.sigma.run

@@ -7,7 +7,7 @@ new Env("Sigma卡路里-存凭证");
 脚本兼容：Surge、QuantumultX、Loon、Shadowrocket，不支持青龙
 
 [rewrite_local]
-^https:\/\/api\.sigma\.run\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_rewrite.js
+^https:\/\/api\.sigma\.run\/quidd\/kcal\/act\/redeem$ url script-request-body https://cdn.jsdelivr.net/gh/mikasangF1/quantumultx_rule@main/sigma/sigma_rewrite.js
 
 [MITM]
 hostname = as.sigma.run, api.sigma.run
@@ -66,7 +66,7 @@ async function getCookie() {
 
     // 通知
     const auth = (reqHeaders["Authorization"] || reqHeaders["authorization"] || "").slice(0, 10);
-    const productId = "";
+    let productId = "";
     try {
       const b = JSON.parse(reqBody);
       if (b.productId) productId = b.productId;
