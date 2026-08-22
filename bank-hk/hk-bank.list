@@ -1,0 +1,52 @@
+# > >> HK Bank
+
+# HSBC
+HOST,c-hsbc.lytics.io,Bank
+HOST,mobile.eum-appdynamics.com,Bank
+HOST,tags.tiqcdn.com,Bank
+HOST,hsbc.edge.sdk.awswaf.com,Bank
+HOST,cdnbc.wup.hsbc.com.hk,Bank
+HOST,cdn.optimizely.com,Bank
+HOST,log-58144bf0.we-stats.com,Bank
+HOST-SUFFIX,tealiumiq.com,Bank
+HOST-SUFFIX,hsbc.com.hk,Bank
+HOST-SUFFIX,online-metrix.net,Bank
+HOST-SUFFIX,cloud1.vv1865.com,Bank
+HOST-SUFFIX,liveperson.net,Bank
+HOST-SUFFIX,lpsnmedia.net,Bank
+
+# 大象银行
+HOST-SUFFIX,elebank.com,Bank
+HOST-SUFFIX,appsflyersdk.com,Bank
+# HOST-WILDCARD,api*.futunn.com,Bank
+
+# 众安银行
+HOST-SUFFIX,za.group,Bank
+HOST-SUFFIX,zainvest.group,Bank
+HOST-SUFFIX,crashlytics.com,Bank
+HOST-SUFFIX,zajourney.com,Bank
+HOST,app-measurement.com,Bank
+
+# Wise
+HOST,api.mixpanel.com,Bank
+HOST-SUFFIX,wise.com,Bank
+
+# 中银香港 BOCHK
+HOST-SUFFIX,bochk.com
+HOST-SUFFIX,etnet.com.hk
+
+# 渣打香港 Standard Chartered HK
+HOST-SUFFIX,sc.com
+HOST-SUFFIX,standcharbank.data.adobedc.net
+HOST-SUFFIX,adobedtm.com
+
+# 致富证券 Chief Securities
+HOST-SUFFIX,chiefgroup.com
+HOST-SUFFIX,chiefgroup.com.hk
+HOST-SUFFIX,chiefsec.com
+
+# 复星财富 Fosun Wealth
+HOST-SUFFIX,fosunwealth.com
+
+# 平安数字银行 PAO Bank
+HOST-SUFFIX,paob.com.hk
