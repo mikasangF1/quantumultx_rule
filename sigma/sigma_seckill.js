@@ -10,7 +10,7 @@ new Env("Sigma卡路里抢兑");
 每天18:00放库存, 每日限兑1次, 活动截止2026-08-31
 
 [rewrite_local]
-^https:\/\/[^\/]+\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
+^https:\/\/api\.sigma\.run\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
 
 [MITM]
 hostname = as.sigma.run, api.sigma.run
