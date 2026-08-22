@@ -1,16 +1,21 @@
 /*
 ------------------------------------------
 @Date: 2026.08.22
-@Description: Sigma 卡路里抢兑 — 拦截已签名兑换请求快速重放 + 凭证获取
+@Description: Sigma 卡路里抢兑 — 拦截已签名兑换请求快速重放
 @Author: Adapted from Sliverkiss template
 ------------------------------------------
 new Env("Sigma卡路里抢兑");
 脚本兼容：Surge、QuantumultX、Loon、Shadowrocket，不支持青龙
+活动: 燃烧我的卡路里 (activityId:1001)
+每天18:00放库存, 每日限兑1次, 活动截止2026-08-31
+
 [rewrite_local]
 ^https:\/\/[^\/]+\/quidd\/kcal\/act\/home url script-response-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
 ^https:\/\/[^\/]+\/quidd\/kcal\/act\/redeem$ url script-request-body https://raw.githubusercontent.com/mikasangF1/quantumultx_rule/main/sigma/sigma_seckill.js
+
 [MITM]
 hostname = as.sigma.run, api.sigma.run
+
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
@@ -26,16 +31,20 @@ const $ = new Env("Sigma卡路里抢兑");
 const notify = $.isNode() ? require('./sendNotify') : '';
 //debug
 $.is_debug = ($.isNode() ? process.env.IS_DEDUG : $.getdata('is_debug')) || 'false';
+//ckName
+const ckName = "sigma_data";
 //抢兑配置
 const RETRY = 200;    // 重放次数
 const DELAY = 30;      // 每次间隔ms
 //------------------------------------------
 //抢兑状态
+$.notifyMsg = [];
+$.succCount = 0;
 var sigma = {
   successCount: 0,
   failCount: 0,
   startTime: 0,
-  done: false
+  done: false  // 成功或终止后停止后续重放
 };
 
 // ===== 主程序执行入口 =====
@@ -44,12 +53,50 @@ var sigma = {
     // 拦截 redeem 请求 → 获取凭证 + 快速重放
     await seckillReplay();
   } else if (typeof $response != "undefined" && $response && $response.body) {
-    // 拦截 home 响应 → 通知库存
+    // 拦截 home 响应 → 存商品 + 通知库存
     await showInventory();
   }
 })()
 .catch((e) => { $.logErr(e), $.msg($.name, `⛔️ script run error!`, e.message || e) })
 .finally(() => $.done());
+
+// ===== 拦截 home 响应 → 存商品列表 + 通知库存 =====
+async function showInventory() {
+  try {
+    const body = $.toObj($response.body) || {};
+    const d = body?.data || {};
+    // 真实字段: account.availKcal / account.remainQuota / goodsList
+    if (!(d.account || d.goodsList)) return;
+
+    const acc = d.account || {};
+    const balance = acc.availKcal ?? acc.totalKcal ?? "N/A";
+    const quota = acc.remainQuota ?? "N/A";
+    const ext = d.extConfig || {};
+    const stockBegin = ext.stockBegin || "18:00";
+
+    // 存商品列表供参考
+    $.setjson({
+      account: acc,
+      goodsList: d.goodsList,
+      saveTime: new Date().toISOString()
+    }, 'sigma_goods');
+
+    let stockMsg = "";
+    const items = d.goodsList || [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const name = item.brand ? item.brand + "-" + item.name : (item.name || "[" + item.productId + "]");
+      const inStock = item.stockStatus === 1;
+      const cost = item.kcalCost ?? "?";
+      stockMsg += (inStock ? "✅" : "❌") + " " + name + " " + cost + "kcal" + (item.redeemNotStarted ? "(未开始)" : "") + "\n";
+    }
+    $.msg($.name, `余额:${balance}kcal 今日剩余次数:${quota}`, `每天${stockBegin}放库存\n` + stockMsg);
+    $.info(`余额:${balance} 次数:${quota} 放库存时间:${stockBegin}`);
+    $.info(stockMsg);
+  } catch(e) {
+    $.error("home parse error: " + e);
+  }
+}
 
 // ===== 获取Cookie - 拦截redeem请求头存凭证 =====
 async function getCookie() {
@@ -61,47 +108,16 @@ async function getCookie() {
       $.info("请求头无凭证可存");
       return;
     }
-    // 存储完整请求头，供调试/离线分析用
     const saved = {
       url: $request.url,
       method: $request.method,
       headers: headers,
       saveTime: new Date().toISOString()
     };
-    $.setjson(saved, 'sigma_data');
-    $.msg($.name, `🎉凭证更新成功!`, `authorization: ${maskString(auth)}\nshield: ${maskString(shield)}`);
+    $.setjson(saved, ckName);
+    $.info(`凭证更新成功! authorization: ${maskString(auth)} shield: ${maskString(shield)}`);
   } catch (e) {
     $.error(`获取凭证失败: ${e.message || e}`);
-  }
-}
-
-// ===== 拦截 home 响应 → 通知库存 =====
-async function showInventory() {
-  try {
-    const body = $.toObj($response.body) || {};
-    const d = body?.data || {};
-    // 真实字段: account.availKcal / account.remainQuota / goodsList
-    if (d.account || d.goodsList) {
-      const acc = d.account || {};
-      const balance = acc.availKcal ?? acc.totalKcal ?? "N/A";
-      const quota = acc.remainQuota ?? "N/A";
-      const ext = d.extConfig || {};
-      const stockBegin = ext.stockBegin || "18:00";
-      let stockMsg = "";
-      const items = d.goodsList || [];
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const name = item.brand ? item.brand + "-" + item.name : (item.name || "[" + item.productId + "]");
-        const inStock = item.stockStatus === 1;
-        const cost = item.kcalCost ?? "?";
-        stockMsg += (inStock ? "✅" : "❌") + " " + name + " " + cost + "kcal" + (item.redeemNotStarted ? "(未开始)" : "") + "\n";
-      }
-      $.msg($.name, `余额:${balance}kcal 今日剩余次数:${quota}`, `每天${stockBegin}放库存\n` + stockMsg);
-      $.info(`余额:${balance} 次数:${quota} 放库存时间:${stockBegin}`);
-      $.info(stockMsg);
-    }
-  } catch(e) {
-    $.error("home parse error: " + e);
   }
 }
 
@@ -129,7 +145,9 @@ async function seckillReplay() {
         lower === "authorization" || lower === "x-xsrf-token" ||
         lower === "xsrftoken" || lower === "content-type" ||
         lower === "user-agent" || lower === "cookie" ||
-        lower === "accept" || lower === "accept-language") {
+        lower === "accept" || lower === "accept-language" ||
+        lower === "xy-common-params" || lower === "xy-platform-info" ||
+        lower === "rn-version" || lower === "rn-name") {
       signHeaders[key] = reqHeaders[key];
     }
   }
@@ -137,38 +155,34 @@ async function seckillReplay() {
   $.info("拦截兑换请求");
   $.info("body: " + reqBody.substring(0, 200));
   $.info("签名头: " + Object.keys(signHeaders).length + "个");
-  $.info("开始重放 " + RETRY + " 次...");
+  $.info(`开始重放 ${RETRY} 次, 间隔${DELAY}ms...`);
 
   sigma.startTime = Date.now();
   sigma.successCount = 0;
   sigma.failCount = 0;
   sigma.done = false;
 
-  // 使用 Promise 数组并发重放
-  const promises = [];
+  // 参考美的秒杀: 串行重试, 成功/终止即停
   for (let i = 0; i < RETRY; i++) {
-    promises.push(retryOnce(i, url, signHeaders, reqBody));
-    // 每 DELAY ms 发一个，用 await 简单控制节奏
-    if (DELAY > 0) {
+    if (sigma.done) {
+      $.info(`第${i}次起跳过, 已完成`);
+      break;
+    }
+    await retryOnce(i, url, signHeaders, reqBody);
+    if (i < RETRY - 1 && !sigma.done) {
       await $.wait(DELAY);
     }
   }
-  await Promise.all(promises);
 
   // 最终统计
-  sigma.done = true;
   const elapsed = Date.now() - sigma.startTime;
-  const summary = "成功" + sigma.successCount + " 失败" + sigma.failCount + " 耗时" + elapsed + "ms";
+  const summary = `成功${sigma.successCount} 失败${sigma.failCount} 耗时${elapsed}ms`;
   $.info("完成: " + summary);
-
-  if (sigma.successCount === 0) {
-    $.msg($.name, "抢兑失败", "0/" + RETRY + "成功 耗时" + elapsed + "ms");
-  } else {
-    $.msg($.name, "抢兑完成", summary);
-  }
+  $.notifyMsg.push(`[重放统计] ${summary}`);
+  await sendMsg($.notifyMsg.join("\n"));
 }
 
-// 单次重放
+// 单次重放 (参考美的 todo: 成功→停, 终止条件→停)
 async function retryOnce(idx, url, headers, body) {
   try {
     const res = await Request({
@@ -196,18 +210,25 @@ async function retryOnce(idx, url, headers, body) {
 
     if (code === 0 && data.success === true) {
       sigma.successCount++;
-      $.info("#" + idx + " ✅ 成功! status=" + status);
+      sigma.done = true;
+      const item = data.data || {};
+      $.info(`#${idx} ✅ 抢兑成功! status=${status}`);
+      $.notifyMsg.push(`🎉 抢兑成功! 第${idx + 1}次尝试\n${$.toStr(item).substring(0, 300)}`);
+      return;
+    }
 
-      // 首次成功通知
-      if (sigma.successCount === 1) {
-        const item = data.data || {};
-        $.msg($.name, "🎉 抢兑成功!", "#" + idx + " " + JSON.stringify(item).substring(0, 200));
-      }
-    } else {
+    // 终止条件: 每日上限/已兑换/库存没了 → 停止后续重放
+    if (/上限|已兑换|已参与|次数|不足|抢光|结束/.test(msg)) {
       sigma.failCount++;
-      if (idx < 3) {
-        $.info("#" + idx + " code=" + code + " msg=" + msg);
-      }
+      sigma.done = true;
+      $.info(`#${idx} 终止: ${msg}`);
+      $.notifyMsg.push(`⛔️ ${msg}`);
+      return;
+    }
+
+    sigma.failCount++;
+    if (idx < 5 || idx % 50 === 0) {
+      $.info(`#${idx} code=${code} msg=${msg} status=${status}`);
     }
   } catch(e) {
     sigma.failCount++;
