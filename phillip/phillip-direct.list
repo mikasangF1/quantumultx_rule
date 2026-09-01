@@ -1,0 +1,16 @@
+# Phillip Securities 辉立证券 (POEMS HK) — 直连分流
+# 订阅到 QX 分流设置，策略按需替换（默认 DIRECT）
+#
+# 来源：crt.sh 证书透明日志 + 官网外链核验，2026-09-01
+# 主域5个：poems.com.hk / phillipmart.com.hk / phillip.com.hk / cyberquote.com.hk / phillipsystem.com.hk
+
+# POEMS 官网 + 交易 + 社区
+HOST-SUFFIX,poems.com.hk,DIRECT
+# PhillipMart 平台：App API (hkapi/p3api)、IPO认购 (hkipo)、交易/认证/交易后台
+HOST-SUFFIX,phillipmart.com.hk,DIRECT
+# 辉立香港官网 + 财富管理
+HOST-SUFFIX,phillip.com.hk,DIRECT
+# Cyberquote：2FA验证 + 研报
+HOST-SUFFIX,cyberquote.com.hk,DIRECT
+# Phillipsystem：交易系统后端（uat/business）
+HOST-SUFFIX,phillipsystem.com.hk,DIRECT
