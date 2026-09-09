@@ -1,20 +1,88 @@
-# > >> Google Gemini (PROXY)
+# > >> Google Gemini / Google AI (PROXY)
 
-# 来源：GitHub 多源交叉核验（jimmyzhou521-stack/ai-projects-proxy-rules、
-# storevip/Quantumult-X-Rules、jnlaoshu/MySelf、liueggy/proxy-rules）
-# 策略组统一为 PROXY，若你的配置里叫别的名字，全局替换即可
+# 来源（多源交叉核验 + 去重合并）:
+#   1. blackmatrix7/ios_rule_script  rule/QuantumultX/Gemini/Gemini.list
+#   2. storevip/Quantumult-X-Rules    AI.list  (Google AI 段)
+#   3. jimmyzhou521-stack/ai-projects-proxy-rules
+#   4. jnlaoshu/MySelf QuantumultX/Rule/AIGC.list
+# 策略组: PROXY（与你配置里名字不一致请全局替换）
 # 更新: 2026-09-09
 
-# Gemini 网页主域
+# --------------------
+# Gemini 网页 / App
+# --------------------
 HOST,gemini.google.com,PROXY
 HOST-SUFFIX,gemini.google,PROXY
 HOST-SUFFIX,gemini.google.com,PROXY
-
-# Gemini 静态资源 / 上传 / 会话（漏了会卡加载）
 HOST-SUFFIX,gemini.gstatic.com,PROXY
+HOST-SUFFIX,bard.google.com,PROXY
 
-# Gemini CLI 命令行
+# --------------------
+# Gemini API / AI Studio / MakerSuite
+# --------------------
+HOST,ai.google.dev,PROXY
+HOST-SUFFIX,ai.google.dev,PROXY
+HOST-SUFFIX,ai.studio,PROXY
+HOST-SUFFIX,aistudio.google.com,PROXY
+HOST,makersuite.google.com,PROXY
+HOST-SUFFIX,makersuite.google.com,PROXY
+HOST,alkalimakersuite-pa.clients6.google.com,PROXY
+HOST,alkalicore-pa.clients6.google.com,PROXY
+HOST,webchannel-alkalimakersuite-pa.clients6.google.com,PROXY
+HOST-SUFFIX,generativeai.google,PROXY
+HOST-SUFFIX,generativelanguage.googleapis.com,PROXY
+HOST-SUFFIX,proactivebackend-pa.googleapis.com,PROXY
+HOST-SUFFIX,aisandbox-pa.googleapis.com,PROXY
+
+# --------------------
+# Antigravity / Jules / Flow / Opal / Stitch / Labs
+# --------------------
+HOST-SUFFIX,antigravity.google,PROXY
+HOST-SUFFIX,antigravity.google.com,PROXY
+HOST,antigravity.googleapis.com,PROXY
+HOST,antigravity-pa.googleapis.com,PROXY
+HOST-SUFFIX,antigravity-unleash.goog,PROXY
+HOST-SUFFIX,jules.google,PROXY
+HOST-SUFFIX,jules.google.com,PROXY
+HOST-SUFFIX,flow.google,PROXY
+HOST-SUFFIX,opal.google,PROXY
+HOST-SUFFIX,opal.google.com,PROXY
+HOST-SUFFIX,labs.google,PROXY
+HOST-SUFFIX,labs.google.com,PROXY
+HOST-SUFFIX,stitch.withgoogle.com,PROXY
+
+# --------------------
+# NotebookLM / DeepMind
+# --------------------
+HOST-SUFFIX,notebooklm.google,PROXY
+HOST-SUFFIX,notebooklm.google.com,PROXY
+HOST,notebooklm.googleapis.com,PROXY
+HOST,notebooklm-pa.googleapis.com,PROXY
+HOST-SUFFIX,notebook.google.com,PROXY
+HOST-SUFFIX,deepmind.com,PROXY
+HOST-SUFFIX,deepmind.google,PROXY
+
+# --------------------
+# Gemini CLI / Code Assist
+# --------------------
 HOST-SUFFIX,geminicli.com,PROXY
+HOST,cloudaicompanion.googleapis.com,PROXY
+HOST,cloudcode-pa.googleapis.com,PROXY
+HOST,daily-cloudcode-pa.googleapis.com,PROXY
+HOST-SUFFIX,aicode.googleapis.com,PROXY
+HOST-SUFFIX,aida.googleapis.com,PROXY
+HOST-SUFFIX,geller-pa.googleapis.com,PROXY
+HOST-SUFFIX,robinfrontend-pa.googleapis.com,PROXY
+HOST-SUFFIX,apis.google.com,PROXY
 
-# Google 账号登录跳回 Gemini 的中间请求（防掉登录态）
+# --------------------
+# 登录跳转（防掉登录态）
+# --------------------
 URL-REGEX,^https?://www\.google\.com/.*continue=https://gemini\.google\.com.+
+
+# --------------------
+# 宽松关键词（来自 blackmatrix7，可能误伤，不需要可删）
+# --------------------
+HOST-KEYWORD,generativelanguage,PROXY
+HOST-KEYWORD,colab,PROXY
+HOST-KEYWORD,developerprofiles,PROXY
