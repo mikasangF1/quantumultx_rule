@@ -1,0 +1,20 @@
+# > >> Google Gemini (PROXY)
+
+# 来源：GitHub 多源交叉核验（jimmyzhou521-stack/ai-projects-proxy-rules、
+# storevip/Quantumult-X-Rules、jnlaoshu/MySelf、liueggy/proxy-rules）
+# 策略组统一为 PROXY，若你的配置里叫别的名字，全局替换即可
+# 更新: 2026-09-09
+
+# Gemini 网页主域
+HOST,gemini.google.com,PROXY
+HOST-SUFFIX,gemini.google,PROXY
+HOST-SUFFIX,gemini.google.com,PROXY
+
+# Gemini 静态资源 / 上传 / 会话（漏了会卡加载）
+HOST-SUFFIX,gemini.gstatic.com,PROXY
+
+# Gemini CLI 命令行
+HOST-SUFFIX,geminicli.com,PROXY
+
+# Google 账号登录跳回 Gemini 的中间请求（防掉登录态）
+URL-REGEX,^https?://www\.google\.com/.*continue=https://gemini\.google\.com.+
